@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.lin.magazinehome" android:versionCode="11" android:versionName="5.3.1-public.1">
+    <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="30"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-feature android:name="android.software.leanback" android:required="false"/>
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
+    <queries>
+        <intent><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent>
+        <intent><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LEANBACK_LAUNCHER"/></intent>
+        <package android:name="com.tcl.tv"/>
+        <package android:name="com.tcl.MultiScreenInteraction_TV"/>
+        <package android:name="com.hpplay.happyplay.aw"/>
+        <package android:name="com.ecloud.eshare.server"/>
+        <package android:name="com.waxrain.airplaydmr2"/>
+        <package android:name="com.waxrain.airplaydmr"/>
+        <intent><action android:name="android.intent.action.VIEW"/><data android:scheme="http"/></intent>
+        <intent><action android:name="android.intent.action.VIEW"/><data android:mimeType="video/*"/></intent>
+    </queries>
+    <application android:label="极简电视桌面" android:icon="@mipmap/ic_launcher" android:banner="@drawable/banner"
+        android:theme="@style/Mag" android:allowBackup="false" android:supportsRtl="false"
+        android:usesCleartextTraffic="true" android:largeHeap="false">
+        <activity android:name=".MainActivity" android:launchMode="singleTask" android:stateNotNeeded="true"
+            android:clearTaskOnLaunch="true" android:resumeWhilePausing="true" android:excludeFromRecents="true"
+            android:screenOrientation="landscape" android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|uiMode|density"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.HOME"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:name=".DrawerActivity" android:exported="false" android:screenOrientation="landscape"
+            android:excludeFromRecents="true" android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|uiMode|density"/>
+        <activity android:name=".ScreenSaverActivity" android:exported="true" android:screenOrientation="landscape"
+            android:excludeFromRecents="true" android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|uiMode|density"/>
+        <activity android:name=".SettingsActivity" android:exported="false" android:screenOrientation="landscape"
+            android:excludeFromRecents="true" android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|uiMode|density"/>
+        <activity android:name=".ConnectActivity" android:exported="false" android:screenOrientation="landscape"
+            android:excludeFromRecents="true" android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|uiMode|density"/>
+        <activity android:name=".ViewerActivity" android:exported="false" android:screenOrientation="landscape" android:launchMode="singleTop"
+            android:excludeFromRecents="true" android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|uiMode|density"/>
+        <service android:name=".RemoteService" android:exported="true" android:label="@string/remote_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/remote_service"/>
+        </service>
+        <receiver android:name=".Sleep" android:exported="false"/>
+        <service android:name=".SaverDream" android:exported="true" android:label="极简电视桌面 · 待机"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </service>
+        <receiver android:name=".BootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

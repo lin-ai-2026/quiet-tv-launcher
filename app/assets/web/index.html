@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0a">
+<title>极简电视桌面</title>
+<style>
+:root{--bg:#0b0b0a;--ink:#ece7dd;--grey:#8c877e;--dim:#55514a;--rule:#2a2823;--card:#161513;--card2:#1f1d1a;--gold:#c4a574}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;overscroll-behavior:none}
+body{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+header.top{padding:calc(14px + env(safe-area-inset-top)) 20px 12px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--rule);position:sticky;top:0;background:var(--bg);z-index:5}
+.meta{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+#st{font-size:12px;color:var(--grey);display:flex;align-items:center;gap:6px}
+#st i{width:7px;height:7px;border-radius:50%;background:#5a574f;display:inline-block}
+#st.on i{background:#9fc79a}
+#where{font-size:13px;color:var(--ink);letter-spacing:.04em}
+.actions{display:flex;gap:10px}
+.actions button,.btn{all:unset;text-align:center;padding:12px 0;border-radius:14px;background:var(--card);font-size:15px;color:var(--ink);cursor:pointer}
+.actions button{flex:1;font-size:15px}
+.btn.main,.actions button.main{background:var(--ink);color:#141311;font-weight:600}
+.btn:active,.actions button:active,.keys button:active{background:#2c2a26}
+.btn[disabled]{opacity:.4}
+.hint,.banner{margin:0;padding:12px 20px;font-size:14px;line-height:1.55}
+.hint{background:#1a1814;color:#d8c49b;display:none}
+.hint.on{display:block}
+.banner{background:#221814;color:#e0c0b0;display:none}
+.banner.on{display:block}
+section{display:none;padding:18px 20px 28px}
+section.cur{display:block}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;gap:0;padding:0 8px env(safe-area-inset-bottom);background:rgba(11,11,10,.94);border-top:1px solid var(--rule);z-index:6;backdrop-filter:blur(12px)}
+nav button{all:unset;flex:1;text-align:center;padding:14px 0 12px;font-size:15px;color:var(--grey);cursor:pointer}
+nav button.cur{color:var(--ink);font-weight:600}
+h2{font-size:20px;margin:4px 0 6px;font-weight:700;letter-spacing:.02em}
+p.note{color:var(--grey);font-size:14px;margin:4px 0 0}
+hr{border:0;border-top:1px solid var(--rule);margin:26px 0 18px}
+.row{display:flex;gap:10px;margin-top:14px}
+.row input,input[type=search],input[type=text],input[type=url]{flex:1;min-width:0;background:var(--card);border:0;border-radius:14px;padding:13px 14px;color:var(--ink);font-size:16px;outline:none}
+.row .btn{padding:13px 18px}
+ol{padding-left:20px;margin:10px 0 0;color:#c9c3b8;font-size:15px}ol li{margin:8px 0}ol b{color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chips .btn{padding:10px 14px;font-size:14px}
+.chips .btn.on{background:var(--ink);color:#141311;font-weight:600}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#ece7dd;color:#141311;padding:10px 18px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:8}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+.card{position:relative;aspect-ratio:16/9;border-radius:14px;background:var(--card) center/cover no-repeat;overflow:hidden}
+.card.cur{outline:2px solid var(--gold);outline-offset:1px}
+.card .cap{position:absolute;left:0;right:0;bottom:0;padding:8px 10px 7px;font-size:11px;color:rgba(236,231,221,.8);background:linear-gradient(transparent,rgba(0,0,0,.65))}
+.card .del{position:absolute;top:6px;right:6px;all:unset;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.55);color:#ece7dd;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.empty{margin-top:16px;padding:36px 16px;border-radius:16px;background:var(--card);color:var(--dim);text-align:center;font-size:14px}
+#drop{margin-top:14px;padding:22px 16px;border-radius:16px;border:1px dashed #3a3732;color:var(--grey);text-align:center;font-size:14px}
+#drop.hot{border-color:var(--gold);color:var(--ink);background:#16140f}
+#cropwrap{display:none;margin-top:16px}
+#cropwrap.on{display:block}
+#crop{position:relative;aspect-ratio:16/9;border-radius:16px;background:#111;overflow:hidden;touch-action:none;cursor:grab}
+#crop img{position:absolute;left:0;top:0;max-width:none;will-change:transform;user-select:none;-webkit-user-drag:none}
+#crop .safe{pointer-events:none;position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(236,231,221,.18)}
+#bar{height:3px;background:var(--ink);width:0;transition:width .2s;margin-top:10px;border-radius:2px}
+.set{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--rule)}
+.set .k{font-size:16px}
+.set .v{color:var(--grey);font-size:14px;text-align:right}
+.toggle{width:46px;height:28px;border-radius:14px;background:#2a2823;position:relative;flex-shrink:0;cursor:pointer}
+.toggle.on{background:var(--gold)}
+.toggle i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#ece7dd;transition:left .18s}
+.toggle.on i{left:21px}
+#found{display:none;margin-top:8px}
+#found button{display:block;width:100%;text-align:left;padding:12px 14px;margin-top:6px;border-radius:12px;background:var(--card);color:var(--ink);border:0;font-size:15px}
+</style></head>
+<body>
+<header class="top">
+  <div class="meta">
+    <span id="st"><i></i><span id="stt">正在连接</span></span>
+    <span id="where">—</span>
+  </div>
+  <div class="actions">
+    <button type="button" id="gohome">回桌面</button>
+    <button type="button" id="gohdmi" class="main">切到 HDMI</button>
+  </div>
+</header>
+<div id="hint" class="hint">已设好，按主页或点回桌面就能看到</div>
+<div id="banner" class="banner">连不上电视。请确认手机和电视在同一个 Wi-Fi，然后重新扫码。</div>
+
+<section id="wall" class="cur">
+  <h2>壁纸</h2>
+  <p class="note">先取景、再选样子，满意了再传到电视。照片只留在电视上。</p>
+  <div id="drop">把图片拖到这里，或点下面的按钮选择。一次可以选多张。</div>
+  <input type="file" id="file" accept="image/*" multiple hidden>
+  <div class="row"><button class="btn" id="pick" style="flex:1">选择照片</button></div>
+  <div id="cropwrap">
+    <div id="crop"><img id="cropimg" alt=""><div class="safe"></div></div>
+    <p class="note">按住画面拖动，把要留下的部分放进框里。</p>
+    <div class="chips" id="filters">
+      <button class="btn on" data-f="orig">原图</button>
+      <button class="btn" data-f="dim">暗调</button>
+      <button class="btn" data-f="bw">黑白</button>
+    </div>
+    <div id="bar"></div>
+    <div class="row">
+      <button class="btn main" id="setwall" style="flex:1">设为壁纸</button>
+      <button class="btn" id="show" style="flex:1">在电视上看</button>
+    </div>
+    <div class="row"><button class="btn" id="keep" style="flex:1">只存到相册</button></div>
+  </div>
+  <div class="row"><button class="btn" id="next" style="flex:1">换下一张壁纸</button><button class="btn" id="night" style="flex:1">晚安</button></div>
+  <h2 style="margin-top:28px">相册</h2>
+  <p class="note" id="albunote">最多保存 40 张。点一张设为当前壁纸。</p>
+  <div id="empty" class="empty">还没有上传过照片</div>
+  <div id="grid" class="grid"></div>
+</section>
+
+<section id="cast">
+  <h2>投屏</h2>
+  <div class="row"><button class="btn main" id="opencast" style="flex:1">打开电视的投屏接收</button></div>
+  <ol>
+    <li><b>三星 / 安卓手机</b>：下拉快捷开关，点「Smart View」或「无线投屏」，选这台电视。</li>
+    <li><b>iPhone</b>：控制中心 →「屏幕镜像」。</li>
+    <li><b>视频 App</b>：播放时点右上角「TV」投屏图标，只投视频不投整个屏幕，更清楚也更省电。</li>
+  </ol>
+  <hr>
+  <h2>把链接送到电视</h2>
+  <p class="note">视频地址（.mp4 / .m3u8）用电视的播放器打开，网页用电视上的浏览器打开。</p>
+  <div class="row"><input id="url" placeholder="粘贴链接" inputmode="url"><button class="btn" id="openurl">打开</button></div>
+  <hr>
+  <h2>定时关机</h2>
+  <p class="note" id="sleepst">未设置</p>
+  <div class="chips"><button class="btn" data-s="30">30 分钟</button><button class="btn" data-s="60">1 小时</button><button class="btn" data-s="90">1.5 小时</button><button class="btn" data-s="0">取消</button><button class="btn" data-s="-1">现在待机</button></div>
+</section>
+
+<section id="settings">
+  <h2>设置</h2>
+  <p class="note">改完会马上用在电视上。</p>
+  <div class="set"><div class="k">天气城市</div><div class="v" id="cityv">—</div></div>
+  <div class="row"><input id="cityq" type="search" placeholder="搜索城市，例如 阳江" enterkeyhint="search"><button class="btn" id="citygo">搜索</button></div>
+  <div id="found"></div>
+  <div class="chips" id="citychips"></div>
+  <div class="set"><div class="k">壁纸来源</div></div>
+  <div class="chips" id="wallsrc"></div>
+  <div class="set"><div class="k">换图间隔</div></div>
+  <div class="chips" id="wallint"></div>
+  <div class="set"><div class="k">屏保样式</div></div>
+  <div class="chips" id="saverstyle"></div>
+  <div class="set"><div class="k">屏保亮度</div></div>
+  <div class="chips" id="saverdim"></div>
+  <div class="set"><div class="k">屏保显示新闻</div><div class="toggle" id="tgnews"><i></i></div></div>
+  <div class="set"><div class="k">展签</div><div class="toggle" id="tgplaque"><i></i></div></div>
+  <p class="note">打开后，相册里带拍摄日期或地点的照片，会在画面上留下一行很浅的字。</p>
+  <div class="row" style="margin-top:22px"><button class="btn main" id="night2" style="flex:1">晚安</button></div>
+  <p class="note">进入最暗的时钟屏保。若已设定时关机，到点仍会待机。</p>
+</section>
+
+<nav>
+  <button data-t="wall" class="cur">壁纸</button>
+  <button data-t="cast">投屏</button>
+  <button data-t="settings">设置</button>
+</nav>
+<div id="toast"></div>
+
+<script>
+(function(){
+var K=new URLSearchParams(location.search).get('k')||'';
+var $=function(s){return document.querySelector(s)};
+var CITIES=["自动定位","北京","上海","广州","深圳","成都","杭州","武汉","西安","南京","重庆","天津","长沙","郑州","苏州","厦门","青岛","昆明","沈阳","哈尔滨","韶关","阳江","云浮"];
+var WALLS=["必应在线","内置精选","纯色","自定义文件夹","自定义图片链接","手机上传","暗色（省电）"];
+var INTS=["30 秒","1 分钟","5 分钟","15 分钟","30 分钟","1 小时","每天"];
+var STYLES=["数字时钟","指针时钟","翻页时钟","文字时钟"];
+var DIMS=["标准","柔和","暗","极暗"];
+var WHERE={hdmi:"正在 HDMI",home:"正在桌面",saver:"正在屏保",viewer:"正在看图"};
+var ws=null,open=false,state={cast:true,sleep:0,photos:[],where:"home",signalOk:true};
+var pendingHint=false;
+
+function toast(t){var e=$('#toast');e.textContent=t;e.style.opacity=1;clearTimeout(e._t);e._t=setTimeout(function(){e.style.opacity=0},1800)}
+function qurl(path, extra){return path+'?k='+encodeURIComponent(K)+(extra?('&'+extra):'')}
+function whereText(w){return WHERE[w]||'正在桌面'}
+
+function applyState(s){
+  try{if(typeof s==='string')s=JSON.parse(s);}catch(e){return}
+  state=s;
+  $('#sleepst').textContent=state.sleep>0?('约 '+state.sleep+' 分钟后关机'):'未设置';
+  $('#opencast').disabled=!state.cast;
+  $('#where').textContent=whereText(state.where);
+  if(pendingHint && state.where==='hdmi'){$('#hint').classList.add('on');}
+  if(state.where==='home'){$('#hint').classList.remove('on');pendingHint=false;}
+  $('#cityv').textContent=state.city||CITIES[state.city_idx||0];
+  markChips('wallsrc',state.wall_src); markChips('wallint',state.wall_int);
+  markChips('saverstyle',state.saver_style); markChips('saverdim',state.saver_dim);
+  $('#tgnews').classList.toggle('on',!!state.saver_news);
+  $('#tgplaque').classList.toggle('on',!!state.plaque);
+  renderAlbum(state.photos||[], state.current||'');
+}
+
+function markChips(id, idx){
+  document.querySelectorAll('#'+id+' .btn').forEach(function(b,i){b.classList.toggle('on',i===idx)});
+}
+
+function connected(on){
+  $('#st').className=on?'on':'';
+  $('#stt').textContent=on?'已连接':'重新连接…';
+  $('#banner').classList.toggle('on',!on);
+}
+
+function connect(){
+  try{ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws?k='+encodeURIComponent(K))}catch(e){ws=null;fallback();return}
+  ws.onopen=function(){open=true;connected(true)};
+  ws.onclose=function(){open=false;connected(false);setTimeout(connect,1600)};
+  ws.onerror=function(){/* close handles it */};
+  ws.onmessage=function(ev){var d=ev.data;
+    if(d.indexOf('hello ')===0)applyState(d.slice(6));
+    else if(d.indexOf('state ')===0)applyState(d.slice(6));
+  };
+}
+function fallback(){
+  fetch(qurl('/state')).then(function(r){if(r.status===403){location.reload();return}return r.json()}).then(function(j){if(!j)return;connected(true);applyState(j)}).catch(function(){connected(false);setTimeout(fallback,2000)});
+}
+function send(c){
+  if(open){ws.send(c);return}
+  fetch(qurl('/cmd'),{method:'POST',body:c}).then(function(r){return r.text()}).catch(function(){toast('没发出去，请检查是否同一 Wi-Fi')});
+}
+function refresh(){
+  fetch(qurl('/state')).then(function(r){return r.json()}).then(applyState).catch(function(){});
+}
+if(location.protocol==='file:'){connected(true);$('#stt').textContent='预览'}
+else {connect();fallback();}
+setInterval(function(){if(open)ws.send('ping')},15000);
+
+document.querySelectorAll('nav button').forEach(function(b){b.onclick=function(){
+  document.querySelectorAll('nav button').forEach(function(x){x.classList.toggle('cur',x===b)});
+  document.querySelectorAll('section').forEach(function(s){s.classList.toggle('cur',s.id===b.dataset.t)});
+}});
+
+$('#gohome').onclick=function(){send('home');toast('已回到桌面');pendingHint=false;$('#hint').classList.remove('on')};
+$('#gohdmi').onclick=function(){send('hdmi');toast('已切到 HDMI')};
+$('#night').onclick=$('#night2').onclick=function(){send('night');toast('晚安')};
+$('#next').onclick=function(){send('next');toast('已切换')};
+$('#opencast').onclick=function(){send('cast');toast('电视已打开投屏接收')};
+$('#openurl').onclick=function(){var u=$('#url').value.trim();if(!/^https?:\/\//.test(u)){toast('请输入 http(s) 链接');return}send('url '+u);toast('已发送')};
+document.querySelectorAll('[data-s]').forEach(function(b){b.onclick=function(){var m=+b.dataset.s;send('sleep '+m);
+  toast(m<0?'电视待机':m===0?'已取消定时':'将在 '+b.textContent+'后关机');setTimeout(function(){if(open)ws.send('ping');else refresh()},400)}});
+
+function chips(id, names, key){
+  var box=document.getElementById(id);
+  names.forEach(function(n,i){var b=document.createElement('button');b.className='btn';b.textContent=n;b.onclick=function(){send('set '+key+' '+i);setTimeout(refresh,200)};box.appendChild(b)});
+}
+chips('wallsrc',WALLS,'wall_src'); chips('wallint',INTS,'wall_int');
+chips('saverstyle',STYLES,'saver_style'); chips('saverdim',DIMS,'saver_dim');
+CITIES.forEach(function(n,i){var b=document.createElement('button');b.className='btn';b.textContent=n;b.onclick=function(){send('set city_idx '+i);setTimeout(refresh,250)};$('#citychips').appendChild(b)});
+function tog(el, key){el.onclick=function(){var on=!el.classList.contains('on');el.classList.toggle('on',on);send('set '+key+' '+(on?1:0));setTimeout(refresh,200)}}
+tog($('#tgnews'),'saver_news'); tog($('#tgplaque'),'plaque');
+
+$('#citygo').onclick=searchCity;
+$('#cityq').addEventListener('keydown',function(e){if(e.key==='Enter'){searchCity();e.preventDefault()}});
+function searchCity(){
+  var q=$('#cityq').value.trim(); if(!q){toast('请输入城市名');return}
+  var box=$('#found'); box.style.display='block'; box.textContent='正在搜索…';
+  fetch(qurl('/geo','q='+encodeURIComponent(q))).then(function(r){return r.json()}).then(function(j){
+    box.innerHTML='';
+    if(!j.ok){box.textContent=j.msg||'搜索失败';return}
+    (j.list||[]).forEach(function(it){
+      var b=document.createElement('button'); b.textContent=it.label; b.onclick=function(){
+        send('set city_custom '+it.name+'|'+it.lat+'|'+it.lon); box.innerHTML=''; box.style.display='none';
+        toast('已设为 '+it.name); setTimeout(refresh,250);
+      }; box.appendChild(b);
+    });
+  }).catch(function(){box.textContent='搜索失败，电视现在连不上网，请稍后再试'});
+}
+
+function renderAlbum(photos, current){
+  var grid=$('#grid'), empty=$('#empty');
+  grid.innerHTML='';
+  empty.style.display=photos.length?'none':'block';
+  grid.style.display=photos.length?'grid':'none';
+  $('#albunote').textContent=photos.length?('已有 '+photos.length+' / 40 张。点一张设为当前壁纸。'):'最多保存 40 张。点一张设为当前壁纸。';
+  photos.forEach(function(p){
+    var d=document.createElement('div'); d.className='card'+(p.id===current?' cur':'');
+    if(!location.protocol.startsWith('file')) d.style.backgroundImage='url('+qurl('/thumb','id='+encodeURIComponent(p.id))+')';
+    if(p.cap){var c=document.createElement('div');c.className='cap';c.textContent=p.cap;d.appendChild(c)}
+    var del=document.createElement('button'); del.className='del'; del.type='button'; del.textContent='×';
+    del.onclick=function(e){e.stopPropagation();if(!confirm('从电视上删掉这张？'))return;send('del '+p.id);setTimeout(refresh,250)};
+    d.appendChild(del);
+    d.onclick=function(){send('use '+p.id);pendingHint=true;toast('已设好，按主页或点回桌面就能看到');setTimeout(refresh,250)};
+    grid.appendChild(d);
+  });
+}
+
+/* ----- crop / filter / upload ----- */
+var queue=[], curFile=null, imgNat={w:0,h:0}, pan={x:0,y:0}, startPan={x:0,y:0}, drag=null, filter='orig', ready=false, exif={date:'',loc:''};
+var crop=$('#crop'), cropimg=$('#cropimg');
+function cssFilter(){return filter==='dim'?'brightness(.62) contrast(1.06)':filter==='bw'?'grayscale(1) brightness(.9) contrast(1.05)':'none'}
+function layoutCrop(){
+  if(!imgNat.w)return;
+  var r=crop.getBoundingClientRect(), vw=r.width, vh=r.height;
+  var s=Math.max(vw/imgNat.w, vh/imgNat.h);
+  var iw=imgNat.w*s, ih=imgNat.h*s;
+  var minX=vw-iw, minY=vh-ih;
+  if(pan.x<minX)pan.x=minX; if(pan.x>0)pan.x=0;
+  if(pan.y<minY)pan.y=minY; if(pan.y>0)pan.y=0;
+  cropimg.style.width=iw+'px'; cropimg.style.height=ih+'px';
+  cropimg.style.transform='translate('+pan.x+'px,'+pan.y+'px)';
+  cropimg.style.filter=cssFilter();
+}
+document.querySelectorAll('#filters .btn').forEach(function(b){b.onclick=function(){
+  filter=b.dataset.f; document.querySelectorAll('#filters .btn').forEach(function(x){x.classList.toggle('on',x===b)}); layoutCrop();
+}});
+crop.addEventListener('pointerdown',function(e){crop.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY};startPan={x:pan.x,y:pan.y}});
+crop.addEventListener('pointermove',function(e){if(!drag)return;pan.x=startPan.x+(e.clientX-drag.x);pan.y=startPan.y+(e.clientY-drag.y);layoutCrop()});
+function endDrag(){drag=null} crop.addEventListener('pointerup',endDrag); crop.addEventListener('pointercancel',endDrag);
+window.addEventListener('resize',layoutCrop);
+
+function readExif(buf){
+  exif={date:'',loc:''};
+  try{
+    var dv=new DataView(buf);
+    if(dv.getUint16(0)!==0xFFD8)return;
+    var off=2, len=dv.byteLength;
+    while(off+4<len){
+      if(dv.getUint8(off)!==0xFF)break;
+      var m=dv.getUint8(off+1); var sz=dv.getUint16(off+2);
+      if(m===0xE1 && sz>8){parseTiff(buf, off+4, sz-2);return}
+      if(m===0xDA)return;
+      off+=2+sz;
+    }
+  }catch(e){}
+}
+function parseTiff(buf, start, size){
+  var dv=new DataView(buf);
+  if(dv.getUint8(start)!==0x45)return; // Exif\0\0
+  var tiff=start+6, le=dv.getUint16(tiff)===0x4949;
+  var u16=function(o){return le?dv.getUint16(o,true):dv.getUint16(o,false)};
+  var u32=function(o){return le?dv.getUint32(o,true):dv.getUint32(o,false)};
+  function walk(ifd, want){
+    var out={}; if(ifd<=0||tiff+ifd+2>dv.byteLength)return out;
+    var n=u16(tiff+ifd), p=tiff+ifd+2;
+    for(var i=0;i<n;i++,p+=12){
+      var tag=u16(p), typ=u16(p+2), cnt=u32(p+4), val=u32(p+8);
+      if(!want[tag])continue;
+      if(typ===2){ // ascii
+        var so=cnt<=4?p+8:tiff+val, s='';
+        for(var k=0;k<cnt-1&&so+k<dv.byteLength;k++) s+=String.fromCharCode(dv.getUint8(so+k));
+        out[tag]=s;
+      } else if(typ===5 && cnt>=1){ // rational
+        var ro=tiff+val; if(ro+8<=dv.byteLength) out[tag]=[u32(ro),u32(ro+4)];
+      } else if(typ===10 && cnt>=1){
+        var ro2=tiff+val; if(ro2+8<=dv.byteLength){var a=dv.getInt32(ro2,le),b=dv.getInt32(ro2+4,le);out[tag]=[a,b]}
+      } else out[tag]=val;
+    }
+    return out;
+  }
+  var ifd0=u32(tiff+4);
+  var main=walk(ifd0,{0x0132:1,0x8769:1,0x8825:1});
+  var ex=main[0x8769]?walk(main[0x8769],{0x9003:1,0x0132:1}):{};
+  exif.date=ex[0x9003]||main[0x0132]||'';
+  if(main[0x8825]){
+    var gps=walk(main[0x8825],{1:1,2:1,3:1,4:1});
+    // GPSLatitude (2) is 3 rationals — skip if parser only got first; good enough to omit loc if messy
+  }
+}
+
+function loadFile(f){
+  curFile=f; ready=false; filter='orig';
+  document.querySelectorAll('#filters .btn').forEach(function(x){x.classList.toggle('on',x.dataset.f==='orig')});
+  var fr=new FileReader();
+  fr.onload=function(){readExif(fr.result);
+    var blob=new Blob([fr.result]); var url=URL.createObjectURL(blob);
+    var im=new Image();
+    im.onload=function(){
+      imgNat={w:im.naturalWidth,h:im.naturalHeight};
+      cropimg.src=url; pan={x:0,y:0};
+      $('#cropwrap').classList.add('on');
+      requestAnimationFrame(function(){ // center
+        var r=crop.getBoundingClientRect(), s=Math.max(r.width/imgNat.w,r.height/imgNat.h);
+        pan.x=(r.width-imgNat.w*s)/2; pan.y=(r.height-imgNat.h*s)/2;
+        layoutCrop(); ready=true;
+      });
+    };
+    im.onerror=function(){toast('这张图片无法读取'); nextInQueue()};
+    im.src=url;
+  };
+  fr.onerror=function(){toast('这张图片无法读取'); nextInQueue()};
+  fr.readAsArrayBuffer(f);
+}
+function nextInQueue(){
+  if(queue.length) loadFile(queue.shift());
+  else { /* keep last preview */ }
+}
+function takeFiles(list){
+  var arr=[]; for(var i=0;i<list.length;i++) if(list[i].type.indexOf('image')===0) arr.push(list[i]);
+  if(!arr.length){toast('请选择图片');return}
+  queue=arr.slice(1); loadFile(arr[0]);
+}
+$('#pick').onclick=function(){$('#file').click()};
+$('#file').onchange=function(){takeFiles(this.files); this.value=''};
+var drop=$('#drop');
+;['dragenter','dragover'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('hot')})});
+;['dragleave','drop'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('hot')})});
+drop.addEventListener('drop',function(e){if(e.dataTransfer&&e.dataTransfer.files)takeFiles(e.dataTransfer.files)});
+document.addEventListener('dragover',function(e){e.preventDefault()});
+document.addEventListener('drop',function(e){if(e.target===drop)return; if(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length){e.preventDefault();takeFiles(e.dataTransfer.files)}});
+
+function exportBlob(cb){
+  if(!ready){cb(null);return}
+  var r=crop.getBoundingClientRect(), vw=r.width, vh=r.height;
+  var s=Math.max(vw/imgNat.w, vh/imgNat.h);
+  var srcX=-pan.x/s, srcY=-pan.y/s, srcW=vw/s, srcH=vh/s;
+  var c=document.createElement('canvas'); c.width=1920; c.height=1080;
+  var g=c.getContext('2d');
+  g.filter=cssFilter();
+  g.drawImage(cropimg, srcX, srcY, srcW, srcH, 0, 0, 1920, 1080);
+  c.toBlob(function(b){cb(b)},'image/jpeg',0.9);
+}
+function upload(mode){
+  exportBlob(function(blob){
+    if(!blob){toast('请先选择照片');return}
+    var extra='mode='+mode;
+    if(exif.date)extra+='&date='+encodeURIComponent(exif.date);
+    if(exif.loc)extra+='&loc='+encodeURIComponent(exif.loc);
+    var x=new XMLHttpRequest(); x.open('POST',qurl('/upload',extra));
+    x.upload.onprogress=function(e){if(e.lengthComputable)$('#bar').style.width=(e.loaded/e.total*100)+'%'};
+    x.onload=function(){
+      $('#bar').style.width='0';
+      if(x.status===200){
+        if(mode==='wall'){pendingHint=true;$('#hint').classList.add('on');toast('已设好，按主页或点回桌面就能看到')}
+        else if(mode==='show')toast('已在电视上显示');
+        else toast('已存到相册');
+        setTimeout(refresh,300);
+        nextInQueue();
+      } else if(x.status===403){toast('链接已失效，请重新扫码')}
+      else toast('传失败，请检查是否同一 Wi-Fi');
+    };
+    x.onerror=function(){$('#bar').style.width='0';toast('传失败，请检查是否同一 Wi-Fi')};
+    x.send(blob);
+  });
+}
+$('#setwall').onclick=function(){upload('wall')};
+$('#show').onclick=function(){upload('show')};
+$('#keep').onclick=function(){upload('keep')};
+
+window.applyState=applyState;
+// demo state for file:// previews
+if(location.protocol==='file:'){
+  applyState({cast:true,sleep:0,photos:[],where:'hdmi',desired:'hdmi',signalOk:true,wall_src:5,wall_int:2,saver_style:0,saver_dim:1,saver_news:true,plaque:false,city:'阳江',city_idx:21,current:''});
+  $('#banner').classList.remove('on');
+}
+})();
+</script>
+</body></html>
