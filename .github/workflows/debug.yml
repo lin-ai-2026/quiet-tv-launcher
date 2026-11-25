@@ -1,0 +1,36 @@
+name: debug
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Static scan and host checks
+        run: |
+          python3 tools/scan-tree.py
+          python3 tools/make_brand_pngs.py --check
+          bash tools/host-check.sh
+      - name: Android SDK
+        run: |
+          mkdir -p "$HOME/android-sdk/cmdline-tools"
+          curl -fsSL -o /tmp/cmdtools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q /tmp/cmdtools.zip -d /tmp/cmdtools
+          mv /tmp/cmdtools/cmdline-tools "$HOME/android-sdk/cmdline-tools/latest"
+          yes | "$HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$HOME/android-sdk" --licenses >/dev/null || true
+          "$HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$HOME/android-sdk" "platforms;android-30" "build-tools;34.0.0"
+          echo "ANDROID_HOME=$HOME/android-sdk" >> "$GITHUB_ENV"
+      - name: Build debug APK
+        run: bash build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quiet-tv-launcher-debug
+          path: build/quiet-tv-launcher-debug.apk
+          if-no-files-found: error

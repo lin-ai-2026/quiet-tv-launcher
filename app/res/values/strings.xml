@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="remote_label">极简电视桌面 · 手机遥控</string>
+    <string name="remote_desc">让同一 Wi-Fi 下的手机通过扫码页面控制电视：移动光标、点击、滚动、方向键、返回、主页和输入文字。只在手机发来指令时工作，不读取或上传屏幕内容。</string>
+</resources>
